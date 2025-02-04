@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bitlab® Beta</title>
+  <!-- Import the mono font -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Variables for Dark Mode (default) */
+    :root {
+      --body-bg: #000;
+      --body-color: #fff;
+      --container-bg: #111;
+      --container-border: #444;
+      --container-shadow: rgba(255,255,255,0.1);
+      --controls-bg: #000;
+      --input-bg: #111;
+      --input-border: #444;
+      --button-bg: #007aff;
+      --button-color: #fff;
+      --button-hover-bg: #005ecb;
+      --footer-bg: #111;
+      --footer-color: #fff;
+    }
+    /* Overrides for Light Mode */
+    .light-mode {
+      --body-bg: #f7f7f7;
+      --body-color: #333;
+      --container-bg: #fff;
+      --container-border: #e0e0e0;
+      --container-shadow: rgba(0,0,0,0.1);
+      --controls-bg: #fff;
+      --input-bg: #fff;
+      --input-border: #ccc;
+      --button-bg: #007aff;
+      --button-color: #fff;
+      --button-hover-bg: #005ecb;
+      --footer-bg: #fff;
+      --footer-color: #333;
+    }
+    /* Global Resets and Base Styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--body-bg);
+      color: var(--body-color);
+      font-family: 'Roboto Mono', monospace;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    /* Main Container */
+    .container {
+      background-color: var(--container-bg);
+      border: 2px solid var(--container-border);
+      box-shadow: 0 2px 8px var(--container-shadow);
+      border-radius: 8px;
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Theme Toggle Button in Top Right */
+    .theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .theme-toggle button {
+      padding: 6px 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: var(--button-bg);
+      color: var(--button-color);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .theme-toggle button:hover {
+      background-color: var(--button-hover-bg);
+    }
+    /* Left Controls Panel */
+    .controls {
+      width: 320px;
+      padding: 20px;
+      background-color: var(--controls-bg);
+      border-right: 1px solid var(--container-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .controls h1 {
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .controls label {
+      font-size: 12px;
+      margin-bottom: 5px;
+      width: 100%;
+      text-align: left;
+    }
+    .controls input[type="file"],
+    .controls input[type="range"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid var(--input-border);
+      background-color: var(--input-bg);
+      color: var(--body-color);
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .control-group { margin-bottom: 15px; width: 100%; }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    /* Stacked Buttons */
+    .controls button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: var(--button-bg);
+      color: var(--button-color);
+      border: none;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .controls button:hover {
+      background-color: var(--button-hover-bg);
+    }
+    /* Right Preview Panel */
+    .preview {
+      flex: 1;
+      padding: 20px;
+      background-color: var(--body-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      border: 1px solid var(--container-border);
+      display: block;
+    }
+    /* Footer Styling */
+    footer {
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--footer-color);
+      background-color: var(--footer-bg);
+      padding: 10px 0;
+      border-top: 1px solid var(--container-border);
+    }
+    footer a {
+      color: var(--button-bg);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    // Disable right-click and some key combinations to deter copying (not foolproof)
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.onkeydown = function(e) {
+      if (e.keyCode === 123 ||
+          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+          (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+      }
+    };
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+      <button id="toggleThemeButton">🌙</button>
+    </div>
+    
+    <!-- Left Controls Panel -->
+    <div class="controls">
+      <h1>Bitlab® Beta</h1>
+      
+      <label for="upload">Load DATA</label>
+      <input type="file" id="upload" accept="image/*">
+      
+      <div class="control-group">
+        <label for="ditherSize">Bitmap Size: <span id="ditherSizeValue">1</span></label>
+        <input type="range" id="ditherSize" min="1" max="50" value="1">
+      </div>
+      
+      <div class="control-group">
+        <label for="brightness">Brightness: <span id="brightnessValue">0</span></label>
+        <input type="range" id="brightness" min="-50" max="50" value="0">
+      </div>
+      
+      <div class="control-group">
+        <label for="contrast">Contrast: <span id="contrastValue">0</span></label>
+        <input type="range" id="contrast" min="-50" max="50" value="0">
+      </div>
+      
+      <div class="control-group">
+        <label for="threshold">Threshold: <span id="thresholdValue">128</span></label>
+        <input type="range" id="threshold" min="0" max="255" value="128">
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="invert">
+        <label for="invert">Invert</label>
+      </div>
+      
+      <!-- Stacked Buttons -->
+      <button id="resetButton">Reset</button>
+      <button id="downloadSVGButton">Download SVG</button>
+      <button id="downloadPNGButton">Download PNG</button>
+    </div>
+    
+    <!-- Right Preview Panel -->
+    <div class="preview">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+  
+  <footer>
+    Copyright © 2025 Bitlab® Beta v1.0.0 by 
+    <a href="https://www.charleypangus.com" target="_blank">Charley Pangus</a>
+  </footer>
+  
+  <script>
+    // Theme Toggle Logic
+    const toggleThemeButton = document.getElementById('toggleThemeButton');
+    toggleThemeButton.addEventListener('click', () => {
+      if(document.body.classList.contains('light-mode')) {
+        document.body.classList.remove('light-mode');
+        toggleThemeButton.textContent = "🌙"; // Dark mode icon
+      } else {
+        document.body.classList.add('light-mode');
+        toggleThemeButton.textContent = "💡"; // Light mode icon
+      }
+    });
+    
+    // DOM Elements for Bitmap Processing
+    const uploadInput = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let img = new Image();
+    let imageUploaded = false;
+    
+    const ditherSizeSlider = document.getElementById('ditherSize');
+    const ditherSizeValueLabel = document.getElementById('ditherSizeValue');
+    const brightnessSlider = document.getElementById('brightness');
+    const brightnessValueLabel = document.getElementById('brightnessValue');
+    const contrastSlider = document.getElementById('contrast');
+    const contrastValueLabel = document.getElementById('contrastValue');
+    const thresholdSlider = document.getElementById('threshold');
+    const thresholdValueLabel = document.getElementById('thresholdValue');
+    const invertCheckbox = document.getElementById('invert');
+    const resetButton = document.getElementById('resetButton');
+    const downloadSVGButton = document.getElementById('downloadSVGButton');
+    const downloadPNGButton = document.getElementById('downloadPNGButton');
+    
+    // Handle Image Upload
+    uploadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        img = new Image();
+        img.onload = function() {
+          imageUploaded = true;
+          canvas.width = img.width;
+          canvas.height = img.height;
+          updatePreview();
+        }
+        img.src = event.target.result;
+      }
+      reader.readAsDataURL(file);
+    });
+    
+    // Update slider displays and refresh preview when controls change.
+    ditherSizeSlider.addEventListener('input', () => {
+      ditherSizeValueLabel.textContent = ditherSizeSlider.value;
+      updatePreview();
+    });
+    brightnessSlider.addEventListener('input', () => {
+      brightnessValueLabel.textContent = brightnessSlider.value;
+      updatePreview();
+    });
+    contrastSlider.addEventListener('input', () => {
+      contrastValueLabel.textContent = contrastSlider.value;
+      updatePreview();
+    });
+    thresholdSlider.addEventListener('input', () => {
+      thresholdValueLabel.textContent = thresholdSlider.value;
+      updatePreview();
+    });
+    invertCheckbox.addEventListener('change', updatePreview);
+    
+    // Reset Button: Clear image and reset controls.
+    resetButton.addEventListener('click', () => {
+      ditherSizeSlider.value = 1;
+      ditherSizeValueLabel.textContent = "1";
+      brightnessSlider.value = 0;
+      brightnessValueLabel.textContent = "0";
+      contrastSlider.value = 0;
+      contrastValueLabel.textContent = "0";
+      thresholdSlider.value = 128;
+      thresholdValueLabel.textContent = "128";
+      invertCheckbox.checked = false;
+      uploadInput.value = "";
+      imageUploaded = false;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+    
+    // Main updatePreview function for Bitmap Mode.
+    function updatePreview() {
+      if (!imageUploaded) return;
+      
+      const pixelSize = parseInt(ditherSizeSlider.value, 10);
+      const brightness = parseInt(brightnessSlider.value, 10);
+      const contrast = parseInt(contrastSlider.value, 10);
+      const thresholdVal = parseInt(thresholdSlider.value, 10);
+      const invert = invertCheckbox.checked;
+      const contrastFactor = (contrast + 50) / 50;
+      
+      const w = img.width, h = img.height;
+      
+      // Create an offscreen canvas for pixelation.
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = Math.max(1, Math.floor(w / pixelSize));
+      tempCanvas.height = Math.max(1, Math.floor(h / pixelSize));
+      tempCtx.imageSmoothingEnabled = false;
+      tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Draw the pixelated image onto the main canvas.
+      canvas.width = w;
+      canvas.height = h;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tempCanvas, 0, 0, w, h);
+      
+      // Retrieve image data.
+      let imageData = ctx.getImageData(0, 0, w, h);
+      let data = imageData.data;
+      
+      // Process each pixel: convert to grayscale, adjust brightness/contrast, and threshold.
+      for (let i = 0; i < data.length; i += 4) {
+        let lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+        let adjusted = (lum - 128) * contrastFactor + 128 + brightness;
+        let output = adjusted < thresholdVal ? 0 : 255;
+        if (invert) output = output === 0 ? 255 : 0;
+        data[i] = data[i+1] = data[i+2] = output;
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+    }
+    
+    // Utility: Clamp a value to [0, 255].
+    function clamp(value) {
+      return Math.max(0, Math.min(255, value));
+    }
+    
+    // Merged SVG Path Generation: Merge adjacent black pixel blocks.
+    function generateMergedPath(finalData, width, height) {
+      let rects = [];
+      for (let y = 0; y < height; y++) {
+        let x = 0;
+        while (x < width) {
+          const idx = (y * width + x) * 4;
+          if (finalData[idx] === 0) { // black pixel
+            let startX = x;
+            while (x < width) {
+              const currentIdx = (y * width + x) * 4;
+              if (finalData[currentIdx] !== 0) break;
+              x++;
+            }
+            rects.push({ x: startX, y: y, width: x - startX, height: 1 });
+          } else {
+            x++;
+          }
+        }
+      }
+      rects.sort((a, b) => a.x - b.x || a.y - b.y);
+      let merged = [];
+      for (let rect of rects) {
+        let found = false;
+        for (let m of merged) {
+          if (m.x === rect.x && m.width === rect.width && (m.y + m.height) === rect.y) {
+            m.height++;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          merged.push({ ...rect });
+        }
+      }
+      let pathData = "";
+      for (let r of merged) {
+        pathData += `M ${r.x} ${r.y} H ${r.x + r.width} V ${r.y + r.height} H ${r.x} Z `;
+      }
+      return pathData.trim();
+    }
+    
+    // Download SVG: Generate a merged-path SVG.
+    downloadSVGButton.addEventListener('click', () => {
+      const width = canvas.width;
+      const height = canvas.height;
+      const finalData = ctx.getImageData(0, 0, width, height).data;
+      const pathData = generateMergedPath(finalData, width, height);
+      const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" shape-rendering="crispEdges">
+  <path d="${pathData}" fill="#000"/>
+</svg>`;
+      
+      const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "bitmaplab.svg";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+    
+    // Download PNG: Export the canvas as a PNG.
+    downloadPNGButton.addEventListener('click', () => {
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = "bitmaplab.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+    
+    // Helper: Convert RGB to hex.
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      }).join("");
+    }
+  </script>
+</body>
+</html>
